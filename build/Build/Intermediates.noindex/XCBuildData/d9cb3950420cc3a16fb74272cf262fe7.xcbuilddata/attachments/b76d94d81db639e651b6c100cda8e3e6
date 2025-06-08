@@ -1,0 +1,38 @@
+{
+  "" : {
+    "diagnostics" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounter-master.dia",
+    "emit-module-dependencies" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounter-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounter-master-emit-module.dia",
+    "swift-dependencies" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounter-master.swiftdeps"
+  },
+  "/Users/hkececi/Desktop/deneme/TapCounter/TapCounter/ContentView.swift" : {
+    "const-values" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/ContentView.dia",
+    "index-unit-output-path" : "/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/ContentView~partial.swiftmodule"
+  },
+  "/Users/hkececi/Desktop/deneme/TapCounter/TapCounter/TapCounterApp.swift" : {
+    "const-values" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounterApp.swiftconstvalues",
+    "dependencies" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounterApp.d",
+    "diagnostics" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounterApp.dia",
+    "index-unit-output-path" : "/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounterApp.o",
+    "llvm-bc" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounterApp.bc",
+    "object" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounterApp.o",
+    "swift-dependencies" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounterApp.swiftdeps",
+    "swiftmodule" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/TapCounterApp~partial.swiftmodule"
+  },
+  "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/hkececi/Desktop/deneme/TapCounter/build/Build/Intermediates.noindex/TapCounter.build/Debug-iphonesimulator/TapCounter.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

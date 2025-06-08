@@ -7,6 +7,65 @@ struct MathProblem {
     let difficulty: Int
 }
 
+// User Profile with persistent storage
+class UserProfile: ObservableObject {
+    @Published var gamesPlayed: Int = 0
+    @Published var bestScore: Int = 0
+    @Published var bestStreak: Int = 0
+    @Published var totalCorrectAnswers: Int = 0
+    @Published var totalProblems: Int = 0
+    @Published var unlockedAchievements: Set<String> = Set()
+    
+    private let userDefaults = UserDefaults.standard
+    
+    init() {
+        loadData()
+    }
+    
+    private func loadData() {
+        gamesPlayed = userDefaults.integer(forKey: "gamesPlayed")
+        bestScore = userDefaults.integer(forKey: "bestScore")
+        bestStreak = userDefaults.integer(forKey: "bestStreak")
+        totalCorrectAnswers = userDefaults.integer(forKey: "totalCorrectAnswers")
+        totalProblems = userDefaults.integer(forKey: "totalProblems")
+        
+        if let achievementsData = userDefaults.data(forKey: "unlockedAchievements"),
+           let achievements = try? JSONDecoder().decode(Set<String>.self, from: achievementsData) {
+            unlockedAchievements = achievements
+        }
+    }
+    
+    func saveData() {
+        userDefaults.set(gamesPlayed, forKey: "gamesPlayed")
+        userDefaults.set(bestScore, forKey: "bestScore")
+        userDefaults.set(bestStreak, forKey: "bestStreak")
+        userDefaults.set(totalCorrectAnswers, forKey: "totalCorrectAnswers")
+        userDefaults.set(totalProblems, forKey: "totalProblems")
+        
+        if let achievementsData = try? JSONEncoder().encode(unlockedAchievements) {
+            userDefaults.set(achievementsData, forKey: "unlockedAchievements")
+        }
+    }
+    
+    func updateAfterGame(score: Int, streak: Int, correct: Int, total: Int, achievements: [String]) {
+        gamesPlayed += 1
+        bestScore = max(bestScore, score)
+        bestStreak = max(bestStreak, streak)
+        totalCorrectAnswers += correct
+        totalProblems += total
+        
+        for achievement in achievements {
+            unlockedAchievements.insert(achievement)
+        }
+        
+        saveData()
+    }
+    
+    var accuracy: Double {
+        return totalProblems > 0 ? Double(totalCorrectAnswers) / Double(totalProblems) * 100 : 0
+    }
+}
+
 struct ParticleView: View {
     @State private var animate = false
     let color: Color
@@ -284,8 +343,8 @@ class MathGameEngine: ObservableObject {
         
         showResult = true
         
-        // Generate next problem after delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + (fastAnswerBonus ? 0.5 : 0.8)) {
+        // Generate next problem after shorter delay to prevent stacking
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             self.showResult = false
             self.lastAnswerCorrect = nil
             self.showCombo = false
@@ -323,8 +382,8 @@ class MathGameEngine: ObservableObject {
         achievements.append(achievement)
         showAchievement = achievement
         
-        // Hide achievement after 2 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+        // Hide achievement after 1 second to prevent stacking
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.showAchievement = nil
         }
     }
@@ -367,6 +426,7 @@ class MathGameEngine: ObservableObject {
 
 struct ContentView: View {
     @StateObject private var gameEngine = MathGameEngine()
+    @StateObject private var userProfile = UserProfile()
     
     var difficultyText: String {
         switch gameEngine.level {
@@ -452,747 +512,360 @@ struct ContentView: View {
                 }
             }
         }
+        .onChange(of: gameEngine.gameOver) { _, isGameOver in
+            if isGameOver {
+                // Update user profile when game ends
+                userProfile.updateAfterGame(
+                    score: gameEngine.score,
+                    streak: gameEngine.streak,
+                    correct: gameEngine.correctAnswers,
+                    total: gameEngine.totalProblems,
+                    achievements: gameEngine.achievements
+                )
+                
+                // Sync best streak back to game engine for display
+                gameEngine.bestStreak = userProfile.bestStreak
+            }
+        }
     }
     
     var welcomeScreen: some View {
-        ScrollView {
-            VStack(spacing: 30) {
-                // Enhanced title with animation
-                VStack(spacing: 10) {
-                    Text("🔢 Math Speed Clicker")
-                        .font(.system(size: 42, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                        .shadow(color: .blue, radius: 10)
-                        .scaleEffect(1.0)
-                        .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: UUID())
-                    
-                    Text("Made by Hasan Keçeci")
-                        .font(.headline)
-                        .foregroundColor(.white.opacity(0.8))
-                        .shadow(radius: 2)
-                }
+        VStack(spacing: 40) {
+            Spacer()
+            
+            // Simple, clean title
+            VStack(spacing: 15) {
+                Text("⚡ MATH RUSH")
+                    .font(.system(size: 36, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.3), radius: 5)
                 
-                // Enhanced description
+                Text("Quick. Simple. Addictive.")
+                    .font(.title3)
+                    .foregroundColor(.white.opacity(0.8))
+                    .fontWeight(.medium)
+            }
+            
+            Spacer()
+            
+            // Profile stats
+            if userProfile.gamesPlayed > 0 {
                 VStack(spacing: 15) {
-                    Text("🚀 Challenge Your Mind!")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.yellow)
-                        .shadow(color: .yellow, radius: 5)
-                    
-                    Text("Solve math problems as fast as you can!\nEarn combos, unlock achievements, and climb the levels!")
-                        .font(.title3)
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.white.opacity(0.9))
-                        .shadow(radius: 2)
-                        .padding(.horizontal)
-                }
-                
-                // Enhanced level information
-                VStack(spacing: 20) {
-                    Text("🎯 Game Modes")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    
-                    VStack(spacing: 15) {
-                        levelInfoRow(icon: "plus.circle.fill", color: .green, title: "Levels 1-3: Addition", subtitle: "Simple math warm-up")
-                        levelInfoRow(icon: "minus.circle.fill", color: .blue, title: "Levels 4-6: Subtraction", subtitle: "Mind-bending challenges")
-                        levelInfoRow(icon: "multiply.circle.fill", color: .purple, title: "Levels 7-8: Multiplication", subtitle: "Speed calculations")
-                        levelInfoRow(icon: "function", color: .orange, title: "Level 9+: Mixed Operations", subtitle: "Ultimate math mastery")
+                    HStack(spacing: 30) {
+                        VStack(spacing: 5) {
+                            Text("\(userProfile.bestScore)")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(Color.gold)
+                            Text("BEST SCORE")
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.6))
+                                .tracking(1)
+                        }
+                        
+                        VStack(spacing: 5) {
+                            Text("\(userProfile.bestStreak)")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.cyan)
+                            Text("BEST STREAK")
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.6))
+                                .tracking(1)
+                        }
+                        
+                        VStack(spacing: 5) {
+                            Text("\(Int(userProfile.accuracy))%")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.green)
+                            Text("ACCURACY")
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.6))
+                                .tracking(1)
+                        }
                     }
+                    
+                    Text("Games Played: \(userProfile.gamesPlayed)")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
                 }
-                .padding()
+                .padding(.vertical, 20)
+                .padding(.horizontal, 30)
                 .background(
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(.ultraThinMaterial)
+                        .fill(.black.opacity(0.2))
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
-                                .stroke(.white.opacity(0.3), lineWidth: 1)
+                                .stroke(.white.opacity(0.1), lineWidth: 1)
                         )
                 )
-                
-                // Features showcase
-                VStack(spacing: 15) {
-                    Text("✨ Special Features")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    
-                    HStack(spacing: 20) {
-                        featureCard(icon: "flame.fill", title: "Combos", color: .orange)
-                        featureCard(icon: "bolt.fill", title: "Speed Bonus", color: .cyan)
-                        featureCard(icon: "star.fill", title: "Achievements", color: .yellow)
-                    }
-                }
-                
-                // Enhanced start button
-                Button(action: gameEngine.startGame) {
-                    HStack(spacing: 15) {
-                        Image(systemName: "play.circle.fill")
-                            .font(.title)
-                        
-                        Text("Start Your Journey")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                    }
-                    .foregroundColor(.white)
-                    .frame(width: 280, height: 70)
-                    .background(
-                        LinearGradient(
-                            colors: [.blue, .purple, .pink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(35)
-                    .shadow(color: .purple, radius: 15)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 35)
-                            .stroke(.white.opacity(0.3), lineWidth: 2)
-                    )
-                }
-                .scaleEffect(gameEngine.isGameActive ? 0.95 : 1.0)
-                .animation(.spring(response: 0.3), value: gameEngine.isGameActive)
-                
-                // Best streak display
-                if gameEngine.bestStreak > 0 {
-                    VStack {
-                        Text("🏆 Your Best Streak")
-                            .font(.headline)
-                            .foregroundColor(Color.gold)
-                        
-                        Text("\(gameEngine.bestStreak) correct answers")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 15)
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(Color.gold, lineWidth: 2)
-                            )
-                    )
-                }
-            }
-            .padding()
-        }
-    }
-    
-    private func levelInfoRow(icon: String, color: Color, title: String, subtitle: String) -> some View {
-        HStack(spacing: 15) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
-                .frame(width: 30)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.7))
             }
             
             Spacer()
+            
+            // Big, simple start button
+            Button(action: {
+                // Initialize bestStreak from profile on first game
+                if userProfile.gamesPlayed == 0 {
+                    gameEngine.bestStreak = userProfile.bestStreak
+                }
+                gameEngine.startGame()
+            }) {
+                HStack(spacing: 12) {
+                    Image(systemName: "play.fill")
+                        .font(.title2)
+                    
+                    Text("START")
+                        .font(.title)
+                        .fontWeight(.black)
+                        .tracking(2)
+                }
+                .foregroundColor(.black)
+                .frame(width: 200, height: 60)
+                .background(
+                    RoundedRectangle(cornerRadius: 30)
+                        .fill(.white)
+                        .shadow(color: .black.opacity(0.3), radius: 10, y: 5)
+                )
+            }
+            .scaleEffect(gameEngine.isGameActive ? 0.95 : 1.0)
+            .animation(.spring(response: 0.3), value: gameEngine.isGameActive)
+            
+            Spacer()
+            
+            // Simple credit
+            Text("Made by Hasan Keçeci")
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.5))
+                .padding(.bottom, 20)
         }
-        .padding(.vertical, 5)
     }
     
-    private func featureCard(icon: String, title: String, color: Color) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title)
-                .foregroundColor(color)
-                .shadow(color: color, radius: 5)
-            
-            Text(title)
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-        }
-        .frame(width: 80, height: 80)
-        .background(
-            RoundedRectangle(cornerRadius: 15)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(color.opacity(0.5), lineWidth: 1)
-                )
-        )
-    }
+
     
     var gamePlayingScreen: some View {
-        VStack(spacing: 20) {
-            // Enhanced header with advanced stats
-            VStack(spacing: 15) {
-                // Top row - Score and Level
-                HStack {
-                    VStack(alignment: .leading, spacing: 5) {
-                        HStack {
-                            Image(systemName: "star.fill")
-                                .foregroundColor(.yellow)
-                            Text("\(gameEngine.score)")
-                                .font(.title)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                        }
-                        Text("Score")
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.7))
-                    }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 5) {
-                        HStack {
-                            Text("Level \(gameEngine.level)")
-                                .font(.title)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                            Image(systemName: "trophy.fill")
-                                .foregroundColor(.gold)
-                        }
-                        Text(difficultyText)
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.7))
-                    }
-                }
-                
-                // Middle row - Streak and Combo
-                HStack {
-                    VStack(alignment: .leading, spacing: 5) {
-                        HStack {
-                            Image(systemName: "flame.fill")
-                                .foregroundColor(.orange)
-                            Text("\(gameEngine.streak)")
-                                .font(.headline)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                        }
-                        Text("Streak")
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.7))
-                    }
-                    
-                    Spacer()
-                    
-                    if gameEngine.comboMultiplier > 1 {
-                        VStack(alignment: .trailing, spacing: 5) {
-                            HStack {
-                                Text("x\(gameEngine.comboMultiplier)")
-                                    .font(.headline)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.orange)
-                                Image(systemName: "bolt.fill")
-                                    .foregroundColor(.orange)
-                            }
-                            Text("Combo")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.7))
-                        }
-                    }
-                }
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(.white.opacity(0.3), lineWidth: 1)
-                    )
-            )
-            .shadow(radius: 10)
-            
-            // Enhanced timer section
-            VStack(spacing: 12) {
-                HStack {
-                    Image(systemName: "timer")
-                        .foregroundColor(gameEngine.timeRemaining > 10 ? .green : (gameEngine.timeRemaining > 5 ? .orange : .red))
-                    
-                    Text("Time: \(Int(gameEngine.timeRemaining))s")
-                        .font(.title2)
+        VStack(spacing: 30) {
+            // Clean header with essential info only
+            HStack {
+                // Score
+                VStack(spacing: 4) {
+                    Text("\(gameEngine.score)")
+                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .foregroundColor(.white)
+                    Text("SCORE")
+                        .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-                    // Accuracy indicator
-                    HStack {
-                        Image(systemName: "target")
-                            .foregroundColor(.cyan)
-                        Text("\(Int(gameEngine.accuracy))%")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                    }
+                        .foregroundColor(.white.opacity(0.6))
+                        .tracking(1)
                 }
                 
-                // Enhanced timer bar with glow effect
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        Rectangle()
-                            .fill(.white.opacity(0.2))
-                            .frame(height: 12)
-                            .cornerRadius(6)
-                        
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: gameEngine.timeRemaining > 10 ? 
-                                        [.green, .mint] : 
-                                        (gameEngine.timeRemaining > 5 ? [.orange, .yellow] : [.red, .pink]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(width: geometry.size.width * (gameEngine.timeRemaining / 30.0), height: 12)
-                            .cornerRadius(6)
-                            .shadow(
-                                color: gameEngine.timeRemaining > 10 ? .green : 
-                                      (gameEngine.timeRemaining > 5 ? .orange : .red),
-                                radius: gameEngine.timeRemaining < 10 ? 8 : 4
-                            )
-                            .animation(.linear(duration: 0.1), value: gameEngine.timeRemaining)
-                    }
-                }
-                .frame(height: 12)
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 15)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(.white.opacity(0.2), lineWidth: 1)
-                    )
-            )
-            
-            // Enhanced level progress
-            VStack(spacing: 10) {
-                HStack {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .foregroundColor(.blue)
-                    
-                    Text("Progress to Level \(gameEngine.level + 1)")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    
-                    Spacer()
-                    
-                    Text("\(gameEngine.correctAnswers % 5)/5")
-                        .font(.title3)
+                Spacer()
+                
+                // Timer - simple and clean
+                VStack(spacing: 4) {
+                    Text("\(Int(gameEngine.timeRemaining))")
+                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .foregroundColor(gameEngine.timeRemaining > 10 ? .white : .red)
+                    Text("TIME")
+                        .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(.blue.opacity(0.3))
-                                .overlay(
-                                    Capsule()
-                                        .stroke(.blue, lineWidth: 1)
-                                )
-                        )
+                        .foregroundColor(.white.opacity(0.6))
+                        .tracking(1)
                 }
                 
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        Rectangle()
-                            .fill(.white.opacity(0.2))
-                            .frame(height: 8)
-                            .cornerRadius(4)
-                        
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(width: geometry.size.width * gameEngine.levelProgress, height: 8)
-                            .cornerRadius(4)
-                            .shadow(color: .blue, radius: 4)
-                            .animation(.easeInOut(duration: 0.3), value: gameEngine.levelProgress)
+                Spacer()
+                
+                // Level and streak
+                VStack(spacing: 4) {
+                    Text("L\(gameEngine.level)")
+                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .foregroundColor(levelColor)
+                    if gameEngine.streak > 0 {
+                        Text("🔥\(gameEngine.streak)")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.orange)
+                    } else {
+                        Text("LEVEL")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white.opacity(0.6))
+                            .tracking(1)
                     }
                 }
-                .frame(height: 8)
             }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 15)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(.white.opacity(0.2), lineWidth: 1)
-                    )
-            )
+            .padding(.horizontal, 30)
+            .padding(.top, 20)
+            
+            // Simple timer bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Rectangle()
+                        .fill(.white.opacity(0.2))
+                        .frame(height: 4)
+                        .cornerRadius(2)
+                    
+                    Rectangle()
+                        .fill(gameEngine.timeRemaining > 10 ? .white : .red)
+                        .frame(width: geometry.size.width * (gameEngine.timeRemaining / 30.0), height: 4)
+                        .cornerRadius(2)
+                        .animation(.linear(duration: 0.1), value: gameEngine.timeRemaining)
+                }
+            }
+            .frame(height: 4)
+            .padding(.horizontal, 30)
             
             Spacer()
             
-            // Enhanced math problem display
-            VStack(spacing: 25) {
-                // Problem question with enhanced styling
-                VStack(spacing: 15) {
-                    Text("🧮 Problem #\(gameEngine.totalProblems + 1)")
-                        .font(.headline)
-                        .foregroundColor(.white.opacity(0.8))
-                        .shadow(radius: 2)
-                    
-                    Text(gameEngine.currentProblem.question)
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                        .shadow(color: levelColor, radius: 15)
-                        .multilineTextAlignment(.center)
-                        .scaleEffect(gameEngine.showResult ? 1.1 : 1.0)
-                        .rotationEffect(.degrees(gameEngine.showResult ? (gameEngine.lastAnswerCorrect == true ? 5 : -5) : 0))
-                        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: gameEngine.showResult)
-                }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 25)
-                        .fill(.ultraThinMaterial)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 25)
-                                .stroke(levelColor.opacity(0.5), lineWidth: 2)
-                        )
-                )
-                .shadow(color: levelColor, radius: 10)
+            // Clean math problem - this is the focus
+            VStack(spacing: 40) {
+                // Just the equation - big and bold
+                Text(gameEngine.currentProblem.question)
+                    .font(.system(size: 64, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.3), radius: 5)
+                    .scaleEffect(gameEngine.showResult ? 1.1 : 1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: gameEngine.showResult)
                 
-                // Enhanced answer options
+                // Clean answer grid - 2x2
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
                     GridItem(.flexible())
-                ], spacing: 20) {
+                ], spacing: 15) {
                     ForEach(Array(gameEngine.currentProblem.options.enumerated()), id: \.element) { index, option in
                         Button(action: {
                             gameEngine.answerSelected(option)
                         }) {
-                            VStack(spacing: 8) {
-                                Text("\(option)")
-                                    .font(.title)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                                
-                                // Option letter (A, B, C, D)
-                                Text(String(UnicodeScalar(65 + index)!))
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white.opacity(0.7))
-                            }
-                            .frame(width: 140, height: 80)
-                            .background(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                levelColor.opacity(0.3),
-                                                levelColor.opacity(0.6)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
+                            Text("\(option)")
+                                .font(.system(size: 28, weight: .black, design: .rounded))
+                                .foregroundColor(.white)
+                                .frame(width: 120, height: 60)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .fill(.white.opacity(0.2))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 15)
+                                                .stroke(.white.opacity(0.4), lineWidth: 2)
                                         )
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 20)
-                                            .stroke(.white.opacity(0.4), lineWidth: 2)
-                                    )
-                            )
-                            .shadow(color: levelColor, radius: gameEngine.showResult ? 0 : 8)
-                            .overlay(
-                                // Shimmer effect
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [.clear, .white.opacity(0.3), .clear],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .opacity(gameEngine.showResult ? 0 : 0.5)
-                                    .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: false), value: UUID())
-                            )
+                                )
+                                .shadow(color: .black.opacity(0.2), radius: 5, y: 3)
                         }
                         .disabled(gameEngine.showResult)
-                        .scaleEffect(gameEngine.showResult ? 0.9 : 1.0)
-                        .rotationEffect(.degrees(gameEngine.showResult && option == gameEngine.currentProblem.correctAnswer ? 10 : 0))
-                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: gameEngine.showResult)
+                        .scaleEffect(gameEngine.showResult ? 0.95 : 1.0)
+                        .animation(.spring(response: 0.2, dampingFraction: 0.8), value: gameEngine.showResult)
                     }
                 }
             }
             
             Spacer()
-            
-            // Stats
-            HStack(spacing: 30) {
-                VStack {
-                    Text("\(gameEngine.correctAnswers)")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    Text("Correct")
-                        .font(.caption)
-                        .opacity(0.8)
-                }
-                
-                VStack {
-                    Text("\(gameEngine.totalProblems)")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    Text("Total")
-                        .font(.caption)
-                        .opacity(0.8)
-                }
-                
-                VStack {
-                    Text("\(Int(gameEngine.accuracy))%")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    Text("Accuracy")
-                        .font(.caption)
-                        .opacity(0.8)
-                }
-            }
-            .foregroundColor(.white)
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 15)
-                    .fill(.white.opacity(0.1))
-            )
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     var gameOverScreen: some View {
-        ScrollView {
-            VStack(spacing: 30) {
-                // Enhanced game over title
-                VStack(spacing: 15) {
-                    Text("🎯 Game Complete!")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                        .shadow(color: .blue, radius: 10)
-                    
-                                            Text(getPerformanceMessage())
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(Color.gold)
-                        .shadow(radius: 3)
-                        .multilineTextAlignment(.center)
+        VStack(spacing: 40) {
+            Spacer()
+            
+            // Simple game over message
+            VStack(spacing: 15) {
+                Text("TIME'S UP!")
+                    .font(.system(size: 36, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.3), radius: 5)
+                
+                Text(getPerformanceMessage())
+                    .font(.title3)
+                    .fontWeight(.medium)
+                    .foregroundColor(Color.gold)
+            }
+            
+            Spacer()
+            
+            // Big score display
+            VStack(spacing: 15) {
+                Text("FINAL SCORE")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white.opacity(0.6))
+                    .tracking(2)
+                
+                Text("\(gameEngine.score)")
+                    .font(.system(size: 72, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.3), radius: 10)
+            }
+            
+            // Clean stats row
+            HStack(spacing: 40) {
+                VStack(spacing: 8) {
+                    Text("\(gameEngine.level)")
+                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .foregroundColor(levelColor)
+                    Text("LEVEL")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white.opacity(0.6))
+                        .tracking(1)
                 }
                 
-                // Enhanced statistics panel
-                VStack(spacing: 20) {
-                    // Score highlight
-                    VStack(spacing: 10) {
-                        Text("🏆 Final Score")
-                            .font(.headline)
-                            .foregroundColor(.white.opacity(0.8))
-                        
-                        Text("\(gameEngine.score)")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
-                            .foregroundColor(.yellow)
-                            .shadow(color: .yellow, radius: 10)
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(.yellow.opacity(0.5), lineWidth: 2)
-                            )
-                    )
-                    .shadow(color: .yellow, radius: 5)
-                    
-                    // Detailed statistics
-                    VStack(spacing: 15) {
-                        Text("📊 Game Statistics")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 15) {
-                            statCard(icon: "trophy.fill", title: "Level Reached", value: "\(gameEngine.level)", color: Color.gold)
-                            statCard(icon: "checkmark.circle.fill", title: "Correct", value: "\(gameEngine.correctAnswers)", color: .green)
-                            statCard(icon: "target", title: "Accuracy", value: "\(Int(gameEngine.accuracy))%", color: .cyan)
-                            statCard(icon: "flame.fill", title: "Best Streak", value: "\(gameEngine.bestStreak)", color: .orange)
-                        }
-                        
-                        // Additional stats
-                        HStack(spacing: 20) {
-                            VStack {
-                                Text("📝 Total Problems")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
-                                Text("\(gameEngine.totalProblems)")
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                            }
-                            
-                            VStack {
-                                Text("⚡ Max Combo")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
-                                Text("x\(gameEngine.comboMultiplier)")
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.orange)
-                            }
-                            
-                            VStack {
-                                Text("🎯 Difficulty")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
-                                Text(difficultyText)
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.purple)
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(.white.opacity(0.3), lineWidth: 1)
-                            )
-                    )
-                    
-                    // Achievements section
-                    if !gameEngine.achievements.isEmpty {
-                        VStack(spacing: 15) {
-                            Text("🏅 Achievements Unlocked")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(Color.gold)
-                            
-                            LazyVGrid(columns: [
-                                GridItem(.flexible()),
-                                GridItem(.flexible())
-                            ], spacing: 10) {
-                                ForEach(gameEngine.achievements, id: \.self) { achievement in
-                                    Text(achievement)
-                                        .font(.subheadline)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            Capsule()
-                                                .fill(Color.gold.opacity(0.2))
-                                                .overlay(
-                                                    Capsule()
-                                                        .stroke(Color.gold, lineWidth: 1)
-                                                )
-                                        )
-                                }
-                            }
-                        }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(.ultraThinMaterial)
-                                                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.gold.opacity(0.3), lineWidth: 1)
-                            )
-                        )
-                    }
+                VStack(spacing: 8) {
+                    Text("\(gameEngine.correctAnswers)")
+                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .foregroundColor(.green)
+                    Text("CORRECT")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white.opacity(0.6))
+                        .tracking(1)
                 }
                 
-                // Enhanced action buttons
-                VStack(spacing: 15) {
-                    Button(action: gameEngine.startGame) {
-                        HStack(spacing: 15) {
-                            Image(systemName: "arrow.clockwise.circle.fill")
-                                .font(.title2)
-                            
-                            Text("Play Again")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                        }
-                        .foregroundColor(.white)
-                        .frame(width: 250, height: 60)
-                        .background(
-                            LinearGradient(
-                                colors: [.green, .blue, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(30)
-                        .shadow(color: .blue, radius: 10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 30)
-                                .stroke(.white.opacity(0.3), lineWidth: 2)
-                        )
-                    }
-                    
-                    Button(action: gameEngine.resetGame) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "house.circle.fill")
-                                .font(.headline)
-                            
-                            Text("Back to Menu")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundColor(.white.opacity(0.8))
-                        .frame(width: 180, height: 50)
-                        .background(
-                            RoundedRectangle(cornerRadius: 25)
-                                .fill(.ultraThinMaterial)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 25)
-                                        .stroke(.white.opacity(0.3), lineWidth: 1)
-                                )
-                        )
-                    }
+                VStack(spacing: 8) {
+                    Text("\(Int(gameEngine.accuracy))%")
+                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .foregroundColor(.cyan)
+                    Text("ACCURACY")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white.opacity(0.6))
+                        .tracking(1)
                 }
             }
-            .padding()
+            
+            Spacer()
+            
+            // Simple buttons
+            VStack(spacing: 15) {
+                Button(action: gameEngine.startGame) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.title2)
+                        
+                        Text("PLAY AGAIN")
+                            .font(.title3)
+                            .fontWeight(.black)
+                            .tracking(1)
+                    }
+                    .foregroundColor(.black)
+                    .frame(width: 200, height: 50)
+                    .background(
+                        RoundedRectangle(cornerRadius: 25)
+                            .fill(.white)
+                            .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+                    )
+                }
+                
+                Button(action: gameEngine.resetGame) {
+                    Text("MENU")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white.opacity(0.7))
+                        .tracking(1)
+                }
+            }
+            
+            Spacer()
         }
     }
     
-    private func statCard(icon: String, title: String, value: String, color: Color) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
-                .shadow(color: color, radius: 3)
-            
-            Text(value)
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.7))
-        }
-        .frame(height: 80)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 15)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(color.opacity(0.3), lineWidth: 1)
-                )
-        )
-    }
+
     
     private func getPerformanceMessage() -> String {
         let accuracy = gameEngine.accuracy
@@ -1209,33 +882,44 @@ struct ContentView: View {
     }
     
     var resultFeedback: some View {
-        VStack(spacing: 15) {
+        VStack(spacing: 20) {
             if let isCorrect = gameEngine.lastAnswerCorrect {
-                Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .font(.system(size: 80))
-                    .foregroundColor(isCorrect ? .green : .red)
-                    .shadow(color: isCorrect ? .green : .red, radius: 20)
-                    .scaleEffect(gameEngine.showResult ? 1.3 : 0.5)
-                    .rotationEffect(.degrees(gameEngine.showResult ? 360 : 0))
-                    .animation(.spring(response: 0.4, dampingFraction: 0.6), value: gameEngine.showResult)
-                
-                Text(isCorrect ? "Excellent!" : "Try Again!")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .shadow(radius: 5)
-                    .scaleEffect(gameEngine.showResult ? 1.1 : 0.8)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: gameEngine.showResult)
-                
-                if isCorrect {
-                    Text("+\(calculateLastScore()) points")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.yellow)
-                        .shadow(radius: 3)
-                        .scaleEffect(gameEngine.showResult ? 1.0 : 0.5)
-                        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: gameEngine.showResult)
+                VStack(spacing: 15) {
+                    Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(isCorrect ? .green : .red)
+                        .background(
+                            Circle()
+                                .fill(.black)
+                                .frame(width: 80, height: 80)
+                                .shadow(radius: 20)
+                        )
+                    
+                    Text(isCorrect ? "CORRECT!" : "WRONG!")
+                        .font(.title)
+                        .fontWeight(.black)
+                        .foregroundColor(.white)
+                        .tracking(2)
+                    
+                    if isCorrect {
+                        Text("+\(calculateLastScore())")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.yellow)
+                    }
                 }
+                .padding(30)
+                .background(
+                    RoundedRectangle(cornerRadius: 25)
+                        .fill(.black.opacity(0.9))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 25)
+                                .stroke(isCorrect ? .green : .red, lineWidth: 3)
+                        )
+                        .shadow(radius: 30)
+                )
+                .scaleEffect(gameEngine.showResult ? 1.0 : 0.5)
+                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: gameEngine.showResult)
             }
         }
         .opacity(gameEngine.showResult ? 1 : 0)
@@ -1243,87 +927,117 @@ struct ContentView: View {
     }
     
     var comboOverlay: some View {
-        VStack {
+        VStack(spacing: 10) {
             Text("🔥 COMBO x\(gameEngine.comboMultiplier)")
                 .font(.title)
-                .fontWeight(.bold)
+                .fontWeight(.black)
                 .foregroundColor(.orange)
-                .shadow(color: .orange, radius: 10)
-                .scaleEffect(gameEngine.showCombo ? 1.2 : 0.5)
-                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: gameEngine.showCombo)
+                .tracking(2)
             
-            Text("Streak: \(gameEngine.streak)")
+            Text("STREAK: \(gameEngine.streak)")
                 .font(.headline)
+                .fontWeight(.bold)
                 .foregroundColor(.white)
-                .shadow(radius: 3)
+                .tracking(1)
         }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.black.opacity(0.9))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(.orange, lineWidth: 3)
+                )
+                .shadow(radius: 30)
+        )
+        .scaleEffect(gameEngine.showCombo ? 1.0 : 0.5)
         .opacity(gameEngine.showCombo ? 1 : 0)
-        .animation(.easeInOut(duration: 0.3), value: gameEngine.showCombo)
+        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: gameEngine.showCombo)
     }
     
     var perfectLevelOverlay: some View {
-        VStack {
-            Text("⭐ PERFECT LEVEL! ⭐")
+        VStack(spacing: 10) {
+            Text("⭐ PERFECT! ⭐")
                 .font(.title)
-                .fontWeight(.bold)
+                .fontWeight(.black)
                 .foregroundColor(.yellow)
-                .shadow(color: .yellow, radius: 15)
-                .scaleEffect(gameEngine.perfectLevel ? 1.3 : 0.5)
-                .animation(.spring(response: 0.4, dampingFraction: 0.5), value: gameEngine.perfectLevel)
+                .tracking(2)
             
-            Text("+200 Bonus Points")
+            Text("+200 BONUS")
                 .font(.headline)
+                .fontWeight(.bold)
                 .foregroundColor(.white)
-                .shadow(radius: 3)
+                .tracking(1)
         }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.black.opacity(0.9))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(.yellow, lineWidth: 3)
+                )
+                .shadow(radius: 30)
+        )
+        .scaleEffect(gameEngine.perfectLevel ? 1.0 : 0.5)
         .opacity(gameEngine.perfectLevel ? 1 : 0)
-        .animation(.easeInOut(duration: 0.3), value: gameEngine.perfectLevel)
+        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: gameEngine.perfectLevel)
     }
     
     var fastAnswerOverlay: some View {
-        VStack {
-            Text("⚡ LIGHTNING FAST! ⚡")
+        VStack(spacing: 10) {
+            Text("⚡ FAST! ⚡")
                 .font(.title2)
-                .fontWeight(.bold)
+                .fontWeight(.black)
                 .foregroundColor(.cyan)
-                .shadow(color: .cyan, radius: 10)
-                .scaleEffect(gameEngine.fastAnswerBonus ? 1.1 : 0.5)
-                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: gameEngine.fastAnswerBonus)
+                .tracking(2)
             
-            Text("+50 Speed Bonus")
+            Text("+50 SPEED")
                 .font(.subheadline)
+                .fontWeight(.bold)
                 .foregroundColor(.white)
-                .shadow(radius: 3)
+                .tracking(1)
         }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.black.opacity(0.9))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(.cyan, lineWidth: 3)
+                )
+                .shadow(radius: 30)
+        )
+        .scaleEffect(gameEngine.fastAnswerBonus ? 1.0 : 0.5)
         .opacity(gameEngine.fastAnswerBonus ? 1 : 0)
-        .animation(.easeInOut(duration: 0.3), value: gameEngine.fastAnswerBonus)
+        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: gameEngine.fastAnswerBonus)
     }
     
     func achievementOverlay(_ achievement: String) -> some View {
-        VStack {
-                            Text("🏆 ACHIEVEMENT UNLOCKED!")
-                    .font(.headline)
-                    .fontWeight(.bold)
-                    .foregroundColor(Color.gold)
-                .shadow(color: .yellow, radius: 5)
+        VStack(spacing: 10) {
+            Text("🏆 ACHIEVEMENT!")
+                .font(.headline)
+                .fontWeight(.black)
+                .foregroundColor(Color.gold)
+                .tracking(2)
             
             Text(achievement)
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(.title3)
+                .fontWeight(.bold)
                 .foregroundColor(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(.ultraThinMaterial)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 15)
-                                .stroke(.yellow, lineWidth: 2)
-                        )
-                )
-                .shadow(radius: 10)
+                .tracking(1)
         }
-        .scaleEffect(gameEngine.showAchievement != nil ? 1.1 : 0.5)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.black.opacity(0.9))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.gold, lineWidth: 3)
+                )
+                .shadow(radius: 30)
+        )
+        .scaleEffect(gameEngine.showAchievement != nil ? 1.0 : 0.5)
         .opacity(gameEngine.showAchievement != nil ? 1 : 0)
         .animation(.spring(response: 0.4, dampingFraction: 0.6), value: gameEngine.showAchievement)
     }
