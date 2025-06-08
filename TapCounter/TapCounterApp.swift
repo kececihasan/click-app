@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct TapCounterApp: App {
+struct MathSpeedClickerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
