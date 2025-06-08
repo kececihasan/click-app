@@ -1,4 +1,4 @@
-# 🔢 Math Speed Clicker
+# 🔢 Math Speed Clicker Made by Hasan Keçeci
 
 An educational iOS game that challenges users to solve math problems as quickly as possible! Built with SwiftUI, this app combines learning with competitive gameplay through progressive difficulty levels, scoring systems, and real-time feedback.
 
