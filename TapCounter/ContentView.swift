@@ -1179,6 +1179,138 @@ struct ContentView: View {
         }
     }
     
+    // MARK: - Rank-based Start Button Styling
+    private func getRankButtonColors() -> [Color] {
+        if userProfile.gamesPlayed == 0 {
+            return [.white.opacity(0.9), .white.opacity(0.7)]
+        }
+        
+        switch userProfile.currentRank.tier {
+        case .bronze:
+            return [Color(red: 0.9, green: 0.7, blue: 0.4).opacity(0.8), Color(red: 0.7, green: 0.5, blue: 0.2).opacity(0.6)]
+        case .silver:
+            return [Color(red: 0.9, green: 0.9, blue: 0.9).opacity(0.8), Color(red: 0.7, green: 0.7, blue: 0.7).opacity(0.6)]
+        case .gold:
+            return [Color.yellow.opacity(0.8), Color.orange.opacity(0.6)]
+        case .platinum:
+            return [Color(red: 0.95, green: 0.95, blue: 1.0).opacity(0.8), Color(red: 0.8, green: 0.8, blue: 0.9).opacity(0.6)]
+        case .diamond:
+            return [Color.cyan.opacity(0.8), Color.blue.opacity(0.6)]
+        case .master:
+            return [Color.purple.opacity(0.8), Color.indigo.opacity(0.6)]
+        case .grandmaster:
+            return [Color.red.opacity(0.8), Color.orange.opacity(0.6)]
+        }
+    }
+    
+    private func getRankButtonBackgroundColors() -> [Color] {
+        if userProfile.gamesPlayed == 0 {
+            return [.white, Color(white: 0.95), Color(white: 0.90)]
+        }
+        
+        switch userProfile.currentRank.tier {
+        case .bronze:
+            return [Color(red: 0.95, green: 0.85, blue: 0.7), Color(red: 0.9, green: 0.75, blue: 0.5), Color(red: 0.85, green: 0.65, blue: 0.3)]
+        case .silver:
+            return [Color(red: 0.95, green: 0.95, blue: 0.95), Color(red: 0.85, green: 0.85, blue: 0.85), Color(red: 0.75, green: 0.75, blue: 0.75)]
+        case .gold:
+            return [Color(red: 1.0, green: 0.95, blue: 0.7), Color(red: 0.95, green: 0.85, blue: 0.4), Color(red: 0.9, green: 0.75, blue: 0.2)]
+        case .platinum:
+            return [Color(red: 0.98, green: 0.98, blue: 1.0), Color(red: 0.92, green: 0.92, blue: 0.98), Color(red: 0.85, green: 0.85, blue: 0.95)]
+        case .diamond:
+            return [Color(red: 0.9, green: 0.98, blue: 1.0), Color(red: 0.7, green: 0.9, blue: 0.98), Color(red: 0.5, green: 0.8, blue: 0.95)]
+        case .master:
+            return [Color(red: 0.95, green: 0.9, blue: 1.0), Color(red: 0.85, green: 0.7, blue: 0.95), Color(red: 0.75, green: 0.5, blue: 0.9)]
+        case .grandmaster:
+            return [Color(red: 1.0, green: 0.9, blue: 0.9), Color(red: 0.95, green: 0.7, blue: 0.7), Color(red: 0.9, green: 0.5, blue: 0.5)]
+        }
+    }
+    
+    private func getRankButtonBorderColors() -> [Color] {
+        if userProfile.gamesPlayed == 0 {
+            return [.white.opacity(0.8), .white.opacity(0.3)]
+        }
+        
+        let rankColor = userProfile.currentRank.tier.color
+        return [rankColor.opacity(0.8), rankColor.opacity(0.3)]
+    }
+    
+    private func getRankButtonTextColor() -> Color {
+        if userProfile.gamesPlayed == 0 {
+            return .black
+        }
+        
+        switch userProfile.currentRank.tier {
+        case .bronze, .gold:
+            return .black
+        case .silver, .platinum:
+            return Color(red: 0.2, green: 0.2, blue: 0.3)
+        case .diamond:
+            return Color(red: 0.1, green: 0.3, blue: 0.4)
+        case .master:
+            return Color(red: 0.3, green: 0.1, blue: 0.4)
+        case .grandmaster:
+            return Color(red: 0.4, green: 0.1, blue: 0.1)
+        }
+    }
+    
+    private func getRankButtonBorderWidth() -> CGFloat {
+        switch userProfile.currentRank.tier {
+        case .bronze, .silver:
+            return 1
+        case .gold, .platinum:
+            return 1.5
+        case .diamond, .master:
+            return 2
+        case .grandmaster:
+            return 2.5
+        }
+    }
+    
+    private func getRankButtonShadowColor() -> Color {
+        if userProfile.gamesPlayed == 0 {
+            return .black.opacity(0.15)
+        }
+        
+        return userProfile.currentRank.tier.color.opacity(0.3)
+    }
+    
+    private func getRankButtonShadowRadius() -> CGFloat {
+        switch userProfile.currentRank.tier {
+        case .bronze, .silver:
+            return 8
+        case .gold, .platinum:
+            return 10
+        case .diamond, .master:
+            return 12
+        case .grandmaster:
+            return 15
+        }
+    }
+    
+    private func getRankButtonSubtitle() -> String {
+        if userProfile.gamesPlayed == 0 {
+            return "Begin your brain training journey"
+        }
+        
+        switch userProfile.currentRank.tier {
+        case .bronze:
+            return "Keep practicing to improve!"
+        case .silver:
+            return "You're getting better!"
+        case .gold:
+            return "Excellent progress!"
+        case .platinum:
+            return "Outstanding performance!"
+        case .diamond:
+            return "Elite mathematician!"
+        case .master:
+            return "Mathematical master!"
+        case .grandmaster:
+            return "Ultimate brain champion!"
+        }
+    }
+
     var welcomeScreen: some View {
         VStack(spacing: 0) {
             // Top safe area spacer - moves title away from camera/notch
@@ -1360,7 +1492,7 @@ struct ContentView: View {
             
             // Enhanced button layout with better hierarchy
             VStack(spacing: 20) {
-                // Primary Start Button - Most prominent
+                // Rank-based Start Button - Changes design based on user rank
                 Button(action: {
                     // Initialize bestStreak from profile on first game
                     if userProfile.gamesPlayed == 0 {
@@ -1369,37 +1501,102 @@ struct ContentView: View {
                     gameEngine.showModeSelectionScreen()
                 }) {
                     HStack(spacing: 18) {
+                        // Rank-based icon circle
                         ZStack {
+                            // Rank-specific background effects
+                            if userProfile.currentRank.tier == .grandmaster {
+                                Circle()
+                                    .fill(
+                                        RadialGradient(
+                                            colors: [.red.opacity(0.8), .orange.opacity(0.6), .yellow.opacity(0.4)],
+                                            center: .center,
+                                            startRadius: 5,
+                                            endRadius: 30
+                                        )
+                                    )
+                                    .frame(width: 65, height: 65)
+                                    .blur(radius: 2)
+                            } else if userProfile.currentRank.tier == .master {
+                                Circle()
+                                    .fill(
+                                        RadialGradient(
+                                            colors: [.purple.opacity(0.7), .blue.opacity(0.5)],
+                                            center: .center,
+                                            startRadius: 5,
+                                            endRadius: 25
+                                        )
+                                    )
+                                    .frame(width: 60, height: 60)
+                                    .blur(radius: 1)
+                            }
+                            
                             Circle()
-                                .fill(.black.opacity(0.15))
+                                .fill(
+                                    RadialGradient(
+                                        colors: getRankButtonColors(),
+                                        center: .center,
+                                        startRadius: 0,
+                                        endRadius: 25
+                                    )
+                                )
                                 .frame(width: 55, height: 55)
                             
                             Circle()
-                                .stroke(.black.opacity(0.1), lineWidth: 1)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [userProfile.currentRank.tier.color.opacity(0.8), userProfile.currentRank.tier.color.opacity(0.3)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 2
+                                )
                                 .frame(width: 55, height: 55)
                             
-                            Image(systemName: "play.fill")
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundColor(.black)
-                                .offset(x: 2) // Optical alignment for play icon
+                            // Rank icon or play icon
+                            if userProfile.gamesPlayed > 0 {
+                                Text(userProfile.currentRank.tier.icon)
+                                    .font(.system(size: 22))
+                                    .shadow(color: .black.opacity(0.3), radius: 2)
+                            } else {
+                                Image(systemName: "play.fill")
+                                    .font(.system(size: 22, weight: .bold))
+                                    .foregroundColor(.black)
+                                    .offset(x: 2)
+                            }
                         }
                         
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("START GAME")
-                                .font(.system(size: 24, weight: .black, design: .rounded))
-                                .tracking(1.5)
+                            HStack(spacing: 8) {
+                                Text("START GAME")
+                                    .font(.system(size: 24, weight: .black, design: .rounded))
+                                    .tracking(1.5)
+                                
+                                // Rank level indicator for experienced players
+                                if userProfile.gamesPlayed > 0 {
+                                    Text("LV.\(userProfile.currentRank.level)")
+                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(
+                                            Capsule()
+                                                .fill(userProfile.currentRank.tier.color.opacity(0.8))
+                                        )
+                                        .foregroundColor(.white)
+                                        .shadow(color: userProfile.currentRank.tier.color.opacity(0.5), radius: 2)
+                                }
+                            }
                             
-                            Text("Begin your brain training journey")
+                            Text(getRankButtonSubtitle())
                                 .font(.system(size: 14, weight: .medium, design: .rounded))
                                 .opacity(0.75)
                         }
-                        .foregroundColor(.black)
+                        .foregroundColor(getRankButtonTextColor())
                         
                         Spacer()
                         
                         Image(systemName: "chevron.right")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.black.opacity(0.6))
+                            .foregroundColor(getRankButtonTextColor().opacity(0.6))
                     }
                     .padding(.horizontal, 24)
                     .frame(height: 80)
@@ -1407,23 +1604,23 @@ struct ContentView: View {
                         RoundedRectangle(cornerRadius: 24)
                             .fill(
                                 LinearGradient(
-                                    colors: [.white, Color(white: 0.95), Color(white: 0.90)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
+                                    colors: getRankButtonBackgroundColors(),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
                                 )
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 24)
                                     .stroke(
                                         LinearGradient(
-                                            colors: [.white.opacity(0.8), .white.opacity(0.3)],
+                                            colors: getRankButtonBorderColors(),
                                             startPoint: .top,
                                             endPoint: .bottom
                                         ),
-                                        lineWidth: 1
+                                        lineWidth: getRankButtonBorderWidth()
                                     )
                             )
-                            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                            .shadow(color: getRankButtonShadowColor(), radius: getRankButtonShadowRadius(), x: 0, y: 4)
                             .shadow(color: .black.opacity(0.1), radius: 16, x: 0, y: 8)
                     )
                 }
