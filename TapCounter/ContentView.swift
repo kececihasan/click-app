@@ -1,4 +1,156 @@
 import SwiftUI
+import StoreKit
+
+// MARK: - Simple Donation View (without In-App Purchases for now)
+struct DonationView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                // Background gradient
+                LinearGradient(
+                    colors: [
+                        Color.purple.opacity(0.8),
+                        Color.pink.opacity(0.6),
+                        Color.orange.opacity(0.4)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 30) {
+                        // Header
+                        VStack(spacing: 15) {
+                            Text("❤️")
+                                .font(.system(size: 60))
+                            
+                            Text("Support MATH RUSH")
+                                .font(.system(size: 28, weight: .black, design: .rounded))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                            
+                            Text("Help keep the app free and support future updates!")
+                                .font(.headline)
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                        }
+                        .padding(.top, 20)
+                        
+                        // Coming Soon message
+                        VStack(spacing: 20) {
+                            Image(systemName: "gift.fill")
+                                .font(.system(size: 50))
+                                .foregroundColor(.yellow)
+                            
+                            Text("🚧 Coming Soon!")
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                            
+                            Text("Donation features are being prepared.\nStay tuned for the next update!")
+                                .font(.headline)
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.vertical, 40)
+                        
+                        // Donation options placeholder
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: 20) {
+                            DonationCardPlaceholder(emoji: "☕️", title: "Small Tip", description: "Buy me a coffee!", price: "$0.99")
+                            DonationCardPlaceholder(emoji: "🍕", title: "Medium Tip", description: "Grab a slice together!", price: "$2.99")
+                            DonationCardPlaceholder(emoji: "🎮", title: "Large Tip", description: "Support development!", price: "$4.99")
+                            DonationCardPlaceholder(emoji: "❤️", title: "Huge Tip", description: "You're amazing!", price: "$9.99")
+                        }
+                        .padding(.horizontal)
+                        
+                        // Thank you message
+                        VStack(spacing: 15) {
+                            Text("🙏 Thank You!")
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                            
+                            Text("Every donation helps me continue developing amazing features and keeping MATH RUSH free for everyone.")
+                                .font(.body)
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                        }
+                        .padding(.vertical, 20)
+                        .padding(.horizontal, 20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(.black.opacity(0.2))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(.white.opacity(0.3), lineWidth: 1)
+                                )
+                        )
+                        .padding(.horizontal)
+                        
+                        Spacer(minLength: 100)
+                    }
+                }
+            }
+            .navigationTitle("Support")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(.white)
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Donation Card Placeholder
+struct DonationCardPlaceholder: View {
+    let emoji: String
+    let title: String
+    let description: String
+    let price: String
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(emoji)
+                .font(.system(size: 40))
+            
+            Text(title)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+            
+            Text(description)
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.8))
+                .multilineTextAlignment(.center)
+            
+            Text(price)
+                .font(.system(size: 20, weight: .black, design: .rounded))
+                .foregroundColor(.white)
+                .padding(.top, 5)
+        }
+        .frame(height: 140)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.white.opacity(0.15))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(.white.opacity(0.3), lineWidth: 1)
+                )
+        )
+        .opacity(0.6) // Make it look disabled/placeholder
+    }
+}
 
 struct MathProblem {
     let question: String
@@ -863,6 +1015,7 @@ struct ContentView: View {
     @StateObject private var userProfile = UserProfile()
     @State private var showingShareSheet = false
     @State private var showingLearnMenu = false
+    @State private var showingDonationView = false
     
     var difficultyText: String {
         return gameEngine.selectedMode.rawValue
@@ -930,6 +1083,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingLearnMenu) {
             LearnMenuView()
+        }
+        .sheet(isPresented: $showingDonationView) {
+            DonationView()
         }
         .onAppear {
             // Connect userProfile to gameEngine
@@ -1143,6 +1299,33 @@ struct ContentView: View {
                                 )
                         )
                     }
+                }
+                
+                // Support/Donation Button
+                Button(action: { showingDonationView = true }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "heart.fill")
+                            .font(.headline)
+                        
+                        Text("SUPPORT")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .tracking(1)
+                    }
+                    .foregroundColor(.white)
+                    .frame(width: 160, height: 45)
+                    .background(
+                        RoundedRectangle(cornerRadius: 22)
+                            .fill(LinearGradient(
+                                colors: [.pink.opacity(0.6), .purple.opacity(0.6)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 22)
+                                    .stroke(.white.opacity(0.4), lineWidth: 1)
+                            )
+                    )
                 }
             }
             .scaleEffect(gameEngine.isGameActive ? 0.95 : 1.0)
