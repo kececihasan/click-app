@@ -1180,125 +1180,170 @@ struct ContentView: View {
     }
     
     var welcomeScreen: some View {
-        VStack(spacing: 40) {
-            Spacer()
+        VStack(spacing: 0) {
+            // Top safe area spacer - moves title away from camera/notch
+            Spacer(minLength: 60)
             
-            // Simple, clean title
-            VStack(spacing: 15) {
-                Text("⚡ MATH RUSH")
-                    .font(.system(size: 36, weight: .black, design: .rounded))
-                    .foregroundColor(.white)
-                    .shadow(color: .black.opacity(0.3), radius: 5)
+            // Enhanced title section with better design
+            VStack(spacing: 20) {
+                // Main title with enhanced styling
+                VStack(spacing: 12) {
+                    Text("⚡ MATH RUSH")
+                        .font(.system(size: 42, weight: .black, design: .rounded))
+                        .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
+                        .tracking(2)
+                    
+                    // Subtitle with better typography
+                    Text("Quick. Simple. Addictive.")
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundColor(.white.opacity(0.85))
+                        .tracking(1)
+                }
                 
-                Text("Quick. Simple. Addictive.")
-                    .font(.title3)
-                    .foregroundColor(.white.opacity(0.8))
-                    .fontWeight(.medium)
+                // Visual separator
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(
+                        LinearGradient(
+                            colors: [.white.opacity(0.8), .white.opacity(0.3), .white.opacity(0.8)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: 80, height: 4)
+                    .shadow(color: .black.opacity(0.2), radius: 2)
             }
+            .padding(.horizontal, 30)
             
-            Spacer()
+            Spacer(minLength: 30)
             
-            // Profile stats
+            // Enhanced profile stats with better design
             if userProfile.gamesPlayed > 0 {
-                VStack(spacing: 15) {
-                    // Rank display prominently
-                    VStack(spacing: 8) {
-                        HStack(spacing: 8) {
+                VStack(spacing: 20) {
+                    // Rank display with enhanced design
+                    VStack(spacing: 12) {
+                        HStack(spacing: 12) {
                             Text(userProfile.currentRank.tier.icon)
-                                .font(.title)
+                                .font(.system(size: 32))
+                                .shadow(color: userProfile.currentRank.tier.color.opacity(0.5), radius: 4)
                             Text(userProfile.currentRank.displayName)
-                                .font(.system(size: 28, weight: .black, design: .rounded))
+                                .font(.system(size: 30, weight: .black, design: .rounded))
                                 .foregroundColor(userProfile.currentRank.tier.color)
+                                .shadow(color: .black.opacity(0.3), radius: 3)
                         }
                         Text("CURRENT RANK")
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.6))
-                            .tracking(1)
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.7))
+                            .tracking(2)
                         
-                        // Rank progress bar
+                        // Enhanced rank progress bar
                         let progress = Double(userProfile.rankPoints - userProfile.currentRank.previousRankPoints) / Double(userProfile.currentRank.nextRankPoints - userProfile.currentRank.previousRankPoints)
                         
-                        VStack(spacing: 4) {
+                        VStack(spacing: 6) {
                             GeometryReader { geometry in
                                 ZStack(alignment: .leading) {
-                                    Rectangle()
-                                        .fill(.white.opacity(0.2))
-                                        .frame(height: 6)
-                                        .cornerRadius(3)
+                                    Capsule()
+                                        .fill(.white.opacity(0.15))
+                                        .frame(height: 8)
                                     
-                                    Rectangle()
-                                        .fill(userProfile.currentRank.tier.color)
-                                        .frame(width: geometry.size.width * max(0, min(1, progress)), height: 6)
-                                        .cornerRadius(3)
+                                    Capsule()
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [userProfile.currentRank.tier.color.opacity(0.8), userProfile.currentRank.tier.color],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .frame(width: geometry.size.width * max(0, min(1, progress)), height: 8)
+                                        .shadow(color: userProfile.currentRank.tier.color.opacity(0.4), radius: 2)
                                 }
                             }
-                            .frame(height: 6)
+                            .frame(height: 8)
                             
                             HStack {
                                 Text("\(userProfile.rankPoints)")
-                                    .font(.caption2)
-                                    .foregroundColor(.white.opacity(0.6))
+                                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.7))
                                 Spacer()
                                 Text("\(userProfile.currentRank.nextRankPoints)")
-                                    .font(.caption2)
-                                    .foregroundColor(.white.opacity(0.6))
+                                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.7))
                             }
                         }
-                        .frame(width: 200)
+                        .frame(width: 220)
                     }
                     
-                    HStack(spacing: 30) {
-                        VStack(spacing: 5) {
+                    // Enhanced stats grid
+                    HStack(spacing: 25) {
+                        VStack(spacing: 6) {
                             Text("\(userProfile.bestScore)")
-                                .font(.system(size: 20, weight: .bold))
+                                .font(.system(size: 24, weight: .black, design: .rounded))
                                 .foregroundColor(Color.gold)
+                                .shadow(color: Color.gold.opacity(0.3), radius: 2)
                             Text("BEST SCORE")
-                                .font(.caption2)
-                                .foregroundColor(.white.opacity(0.6))
-                                .tracking(1)
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.7))
+                                .tracking(1.5)
                         }
                         
-                        VStack(spacing: 5) {
+                        VStack(spacing: 6) {
                             Text("\(userProfile.bestStreak)")
-                                .font(.system(size: 20, weight: .bold))
+                                .font(.system(size: 24, weight: .black, design: .rounded))
                                 .foregroundColor(.cyan)
+                                .shadow(color: .cyan.opacity(0.3), radius: 2)
                             Text("BEST STREAK")
-                                .font(.caption2)
-                                .foregroundColor(.white.opacity(0.6))
-                                .tracking(1)
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.7))
+                                .tracking(1.5)
                         }
                         
-                        VStack(spacing: 5) {
+                        VStack(spacing: 6) {
                             Text("\(Int(userProfile.accuracy))%")
-                                .font(.system(size: 20, weight: .bold))
+                                .font(.system(size: 24, weight: .black, design: .rounded))
                                 .foregroundColor(.green)
+                                .shadow(color: .green.opacity(0.3), radius: 2)
                             Text("ACCURACY")
-                                .font(.caption2)
-                                .foregroundColor(.white.opacity(0.6))
-                                .tracking(1)
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.7))
+                                .tracking(1.5)
                         }
                     }
                     
+                    // Games played indicator
                     Text("Games Played: \(userProfile.gamesPlayed)")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.7))
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundColor(.white.opacity(0.8))
                 }
-                .padding(.vertical, 20)
+                .padding(.vertical, 25)
                 .padding(.horizontal, 30)
                 .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(.black.opacity(0.2))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(.white.opacity(0.1), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(
+                            LinearGradient(
+                                colors: [.black.opacity(0.15), .black.opacity(0.25)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
                         )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.white.opacity(0.2), .white.opacity(0.05)],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    ),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
                 )
             }
             
-            Spacer()
+            Spacer(minLength: 25)
             
             // Enhanced button layout with better hierarchy
-            VStack(spacing: 25) {
+            VStack(spacing: 20) {
                 // Primary Start Button - Most prominent
                 Button(action: {
                     // Initialize bestStreak from profile on first game
@@ -1307,42 +1352,63 @@ struct ContentView: View {
                     }
                     gameEngine.showModeSelectionScreen()
                 }) {
-                    HStack(spacing: 15) {
+                    HStack(spacing: 18) {
                         ZStack {
                             Circle()
-                                .fill(.black.opacity(0.2))
-                                .frame(width: 50, height: 50)
+                                .fill(.black.opacity(0.15))
+                                .frame(width: 55, height: 55)
+                            
+                            Circle()
+                                .stroke(.black.opacity(0.1), lineWidth: 1)
+                                .frame(width: 55, height: 55)
                             
                             Image(systemName: "play.fill")
-                                .font(.title2)
+                                .font(.system(size: 22, weight: .bold))
                                 .foregroundColor(.black)
+                                .offset(x: 2) // Optical alignment for play icon
                         }
                         
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 6) {
                             Text("START GAME")
-                                .font(.system(size: 22, weight: .black, design: .rounded))
-                                .tracking(1)
+                                .font(.system(size: 24, weight: .black, design: .rounded))
+                                .tracking(1.5)
                             
-                            Text("Begin your brain training")
-                                .font(.caption)
-                                .opacity(0.8)
+                            Text("Begin your brain training journey")
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .opacity(0.75)
                         }
                         .foregroundColor(.black)
                         
                         Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.black.opacity(0.6))
                     }
-                    .padding(.horizontal, 20)
-                    .frame(height: 70)
+                    .padding(.horizontal, 24)
+                    .frame(height: 80)
                     .background(
-                        RoundedRectangle(cornerRadius: 20)
+                        RoundedRectangle(cornerRadius: 24)
                             .fill(
                                 LinearGradient(
-                                    colors: [.white, Color(white: 0.92)],
+                                    colors: [.white, Color(white: 0.95), Color(white: 0.90)],
                                     startPoint: .top,
                                     endPoint: .bottom
                                 )
                             )
-                            .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 6)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 24)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.white.opacity(0.8), .white.opacity(0.3)],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            )
+                            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                            .shadow(color: .black.opacity(0.1), radius: 16, x: 0, y: 8)
                     )
                 }
                 .buttonStyle(PressableButtonStyle())
@@ -1416,13 +1482,20 @@ struct ContentView: View {
             .scaleEffect(gameEngine.isGameActive ? 0.95 : 1.0)
             .animation(.spring(response: 0.3), value: gameEngine.isGameActive)
             
-            Spacer()
+            Spacer(minLength: 20)
             
-            // Simple credit
-            Text("Made by Hasan Keçeci")
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.5))
-                .padding(.bottom, 20)
+            // Enhanced credit section
+            VStack(spacing: 8) {
+                Text("Made by Hasan Keçeci")
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.6))
+                
+                Text("© 2024 MATH RUSH")
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.4))
+                    .tracking(1)
+            }
+            .padding(.bottom, 25)
         }
     }
     
