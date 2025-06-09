@@ -1184,36 +1184,52 @@ struct ContentView: View {
             // Top safe area spacer - moves title away from camera/notch
             Spacer(minLength: 60)
             
-            // Enhanced title section with better design
-            VStack(spacing: 20) {
-                // Main title with enhanced styling
-                VStack(spacing: 12) {
-                    Text("⚡ MATH RUSH")
-                        .font(.system(size: 42, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
-                        .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
-                        .tracking(2)
+            // Enhanced title section with responsive design
+            GeometryReader { geometry in
+                VStack(spacing: 20) {
+                    // Main title with responsive sizing
+                    VStack(spacing: 12) {
+                        Text("⚡ MATH RUSH")
+                            .font(.system(
+                                size: min(geometry.size.width * 0.11, 42),
+                                weight: .black,
+                                design: .rounded
+                            ))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
+                            .tracking(geometry.size.width > 375 ? 2 : 1)
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
+                        
+                        // Subtitle with responsive typography
+                        Text("Quick. Simple. Addictive.")
+                            .font(.system(
+                                size: min(geometry.size.width * 0.045, 18),
+                                weight: .semibold,
+                                design: .rounded
+                            ))
+                            .foregroundColor(.white.opacity(0.85))
+                            .tracking(geometry.size.width > 375 ? 1 : 0.5)
+                            .minimumScaleFactor(0.8)
+                            .lineLimit(1)
+                    }
                     
-                    // Subtitle with better typography
-                    Text("Quick. Simple. Addictive.")
-                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white.opacity(0.85))
-                        .tracking(1)
-                }
-                
-                // Visual separator
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(
-                        LinearGradient(
-                            colors: [.white.opacity(0.8), .white.opacity(0.3), .white.opacity(0.8)],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                    // Visual separator with responsive width
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(
+                            LinearGradient(
+                                colors: [.white.opacity(0.8), .white.opacity(0.3), .white.opacity(0.8)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .frame(width: 80, height: 4)
-                    .shadow(color: .black.opacity(0.2), radius: 2)
+                        .frame(width: min(geometry.size.width * 0.2, 80), height: 4)
+                        .shadow(color: .black.opacity(0.2), radius: 2)
+                }
+                .frame(width: geometry.size.width, alignment: .center)
             }
-            .padding(.horizontal, 30)
+            .frame(height: 120)
+            .padding(.horizontal, 20)
             
             Spacer(minLength: 30)
             
