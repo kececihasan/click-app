@@ -1,6 +1,77 @@
 import SwiftUI
 import StoreKit
 
+// MARK: - Custom Button Styles and Components
+struct PressableButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
+struct MenuButton: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let color: Color
+    let isGradient: Bool
+    let isDisabled: Bool
+    let action: () -> Void
+    
+    init(icon: String, title: String, subtitle: String, color: Color = .blue, gradient: [Color]? = nil, isDisabled: Bool = false, action: @escaping () -> Void) {
+        self.icon = icon
+        self.title = title
+        self.subtitle = subtitle
+        self.color = gradient?.first ?? color
+        self.isGradient = gradient != nil
+        self.isDisabled = isDisabled
+        self.action = action
+    }
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(isDisabled ? 0.2 : 0.3))
+                        .frame(width: 40, height: 40)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(isDisabled ? .white.opacity(0.4) : color)
+                }
+                
+                VStack(spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .tracking(0.5)
+                        .foregroundColor(isDisabled ? .white.opacity(0.4) : .white)
+                    
+                    Text(subtitle)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(isDisabled ? .white.opacity(0.3) : .white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                }
+            }
+            .frame(height: 85)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(color.opacity(isDisabled ? 0.05 : (isGradient ? 0.2 : 0.15)))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(color.opacity(isDisabled ? 0.1 : 0.3), lineWidth: 1)
+                    )
+            )
+        }
+        .disabled(isDisabled)
+        .buttonStyle(PressableButtonStyle())
+    }
+}
+
 // MARK: - Simple Donation View (without In-App Purchases for now)
 struct DonationView: View {
     @Environment(\.dismiss) private var dismiss
@@ -1226,8 +1297,9 @@ struct ContentView: View {
             
             Spacer()
             
-            // Big, simple start button
-            VStack(spacing: 15) {
+            // Enhanced button layout with better hierarchy
+            VStack(spacing: 25) {
+                // Primary Start Button - Most prominent
                 Button(action: {
                     // Initialize bestStreak from profile on first game
                     if userProfile.gamesPlayed == 0 {
@@ -1235,98 +1307,110 @@ struct ContentView: View {
                     }
                     gameEngine.showModeSelectionScreen()
                 }) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "play.fill")
-                            .font(.title2)
-                        
-                        Text("START")
-                            .font(.title)
-                            .fontWeight(.black)
-                            .tracking(2)
-                    }
-                    .foregroundColor(.black)
-                    .frame(width: 200, height: 60)
-                    .background(
-                        RoundedRectangle(cornerRadius: 30)
-                            .fill(.white)
-                            .shadow(color: .black.opacity(0.3), radius: 10, y: 5)
-                    )
-                }
-                
-                // Learn button
-                Button(action: { showingLearnMenu = true }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "brain.head.profile")
-                            .font(.headline)
-                        
-                        Text("LEARN")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .tracking(1)
-                    }
-                    .foregroundColor(.white)
-                    .frame(width: 160, height: 45)
-                    .background(
-                        RoundedRectangle(cornerRadius: 22)
-                            .fill(.white.opacity(0.2))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 22)
-                                    .stroke(.white.opacity(0.4), lineWidth: 1)
-                            )
-                    )
-                }
-                
-                // Share Stats Button (only show if user has played games)
-                if userProfile.gamesPlayed > 0 {
-                    Button(action: { showingShareSheet = true }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.headline)
+                    HStack(spacing: 15) {
+                        ZStack {
+                            Circle()
+                                .fill(.black.opacity(0.2))
+                                .frame(width: 50, height: 50)
                             
-                            Text("SHARE STATS")
-                                .font(.headline)
-                                .fontWeight(.bold)
-                                .tracking(1)
+                            Image(systemName: "play.fill")
+                                .font(.title2)
+                                .foregroundColor(.black)
                         }
-                        .foregroundColor(.white)
-                        .frame(width: 160, height: 45)
-                        .background(
-                            RoundedRectangle(cornerRadius: 22)
-                                .fill(.white.opacity(0.2))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 22)
-                                        .stroke(.white.opacity(0.4), lineWidth: 1)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("START GAME")
+                                .font(.system(size: 22, weight: .black, design: .rounded))
+                                .tracking(1)
+                            
+                            Text("Begin your brain training")
+                                .font(.caption)
+                                .opacity(0.8)
+                        }
+                        .foregroundColor(.black)
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .frame(height: 70)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(
+                                LinearGradient(
+                                    colors: [.white, Color(white: 0.92)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
                                 )
+                            )
+                            .shadow(color: .black.opacity(0.25), radius: 12, x: 0, y: 6)
+                    )
+                }
+                .buttonStyle(PressableButtonStyle())
+                
+                // Secondary action buttons in a 2x2 grid
+                LazyVGrid(columns: [
+                    GridItem(.flexible(), spacing: 12),
+                    GridItem(.flexible(), spacing: 12)
+                ], spacing: 12) {
+                    // Learn Button
+                    MenuButton(
+                        icon: "brain.head.profile",
+                        title: "LEARN",
+                        subtitle: "Math tips & tricks",
+                        color: .blue,
+                        action: { showingLearnMenu = true }
+                    )
+                    
+                    // Support Button
+                    MenuButton(
+                        icon: "heart.fill",
+                        title: "SUPPORT",
+                        subtitle: "Help development",
+                        gradient: [.pink, .purple],
+                        action: { showingDonationView = true }
+                    )
+                    
+                    // Share Stats Button (conditionally shown)
+                    if userProfile.gamesPlayed > 0 {
+                        MenuButton(
+                            icon: "square.and.arrow.up",
+                            title: "SHARE",
+                            subtitle: "Show your stats",
+                            color: .green,
+                            action: { showingShareSheet = true }
+                        )
+                        
+                        // Achievements Button (placeholder for future feature)
+                        MenuButton(
+                            icon: "trophy.fill",
+                            title: "STATS",
+                            subtitle: "View achievements",
+                            color: .orange,
+                            isDisabled: true,
+                            action: { /* TODO: Achievements screen */ }
+                        )
+                    } else {
+                        // For new users, show different options
+                        MenuButton(
+                            icon: "questionmark.circle.fill",
+                            title: "TUTORIAL",
+                            subtitle: "Learn how to play",
+                            color: .cyan,
+                            isDisabled: true,
+                            action: { /* TODO: Tutorial */ }
+                        )
+                        
+                        MenuButton(
+                            icon: "gear",
+                            title: "SETTINGS",
+                            subtitle: "App preferences",
+                            color: .gray,
+                            isDisabled: true,
+                            action: { /* TODO: Settings */ }
                         )
                     }
                 }
-                
-                // Support/Donation Button
-                Button(action: { showingDonationView = true }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "heart.fill")
-                            .font(.headline)
-                        
-                        Text("SUPPORT")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .tracking(1)
-                    }
-                    .foregroundColor(.white)
-                    .frame(width: 160, height: 45)
-                    .background(
-                        RoundedRectangle(cornerRadius: 22)
-                            .fill(LinearGradient(
-                                colors: [.pink.opacity(0.6), .purple.opacity(0.6)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            ))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 22)
-                                    .stroke(.white.opacity(0.4), lineWidth: 1)
-                            )
-                    )
-                }
+                .padding(.horizontal, 8)
             }
             .scaleEffect(gameEngine.isGameActive ? 0.95 : 1.0)
             .animation(.spring(response: 0.3), value: gameEngine.isGameActive)
