@@ -1361,13 +1361,14 @@ struct ContentView: View {
                         action: { showingLearnMenu = true }
                     )
                     
-                    // Support Button
+                    // Market Button (Coming Soon)
                     MenuButton(
-                        icon: "heart.fill",
-                        title: "SUPPORT",
-                        subtitle: "Help development",
-                        gradient: [.pink, .purple],
-                        action: { showingDonationView = true }
+                        icon: "storefront.fill",
+                        title: "MARKET",
+                        subtitle: "Coming soon",
+                        color: .purple,
+                        isDisabled: true,
+                        action: { /* TODO: Market/Store feature */ }
                     )
                     
                     // Share Stats Button (conditionally shown)
@@ -1380,14 +1381,14 @@ struct ContentView: View {
                             action: { showingShareSheet = true }
                         )
                         
-                        // Achievements Button (placeholder for future feature)
+                        // Stats Button (Coming Soon)
                         MenuButton(
                             icon: "trophy.fill",
                             title: "STATS",
-                            subtitle: "View achievements",
+                            subtitle: "Coming soon",
                             color: .orange,
                             isDisabled: true,
-                            action: { /* TODO: Achievements screen */ }
+                            action: { /* TODO: Stats/Achievements screen */ }
                         )
                     } else {
                         // For new users, show different options
