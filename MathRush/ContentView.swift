@@ -1486,6 +1486,54 @@ struct ContentView: View {
                         )
                         .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
                 )
+            } else {
+                // First-time user rank incentive
+                VStack(spacing: 15) {
+                    VStack(spacing: 8) {
+                        Text("🎯")
+                            .font(.system(size: 36))
+                        Text("EARN YOUR RANK")
+                            .font(.system(size: 24, weight: .black, design: .rounded))
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.3), radius: 3)
+                    }
+                    
+                    Text("Play your first game to unlock ranking system!")
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .foregroundColor(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                    
+                    Text("🥉 Bronze • 🥈 Silver • 🥇 Gold • 💎 Platinum • 💠 Diamond • 👑 Master • 🏆 Grandmaster")
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundColor(.white.opacity(0.6))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 10)
+                }
+                .padding(.vertical, 25)
+                .padding(.horizontal, 30)
+                .background(
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(
+                            LinearGradient(
+                                colors: [.blue.opacity(0.15), .purple.opacity(0.15)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.white.opacity(0.2), .white.opacity(0.05)],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    ),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                )
             }
             
             Spacer(minLength: 25)
@@ -1568,7 +1616,7 @@ struct ContentView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack(spacing: 8) {
                                 Text("START GAME")
-                                    .font(.system(size: 24, weight: .black, design: .rounded))
+                                    .font(.system(size: userProfile.gamesPlayed > 0 ? 20 : 24, weight: .black, design: .rounded))
                                     .tracking(1.5)
                                 
                                 // Rank level indicator for experienced players
