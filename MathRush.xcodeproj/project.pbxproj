@@ -83,7 +83,7 @@
 			dependencies = (
 			);
 			name = MathRush;
-			productName = TapCounter;
+			productName = MathRush;
 			productReference = A1B2C3D4E5F67898 /* MathRush.app */;
 			productType = "com.apple.product-type.application";
 		};

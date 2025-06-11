@@ -141,7 +141,7 @@ A lightning-fast math game with **rank progression**, **comprehensive learning s
 1. **Clone the repository**
    ```bash
    git clone [repository-url]
-   cd TapCounter
+   cd MathRush
    ```
 
 2. **Open in Xcode**
